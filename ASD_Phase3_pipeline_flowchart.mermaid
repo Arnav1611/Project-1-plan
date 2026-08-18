@@ -1,0 +1,82 @@
+flowchart TD
+
+    subgraph W1["WEEK 1 - Acquire &amp; Audit"]
+        A1["ABIDE I Preprocessed<br/>PCP / CPAC pipeline<br/>OPEN ACCESS - no login<br/>via nilearn one-liner"]
+        A2["ABIDE I sMRI features<br/>precomputed FreeSurfer stats<br/>cortical thickness + volumes"]
+        A3["ABIDE II Composite<br/>Phenotypic CSV<br/>NITRC login - free"]
+        A4{{"PHENOTYPE AUDIT GATE<br/>How many subjects actually<br/>have an anxiety score AND<br/>a severity score AND imaging?"}}
+        A1 --> A4
+        A2 --> A4
+        A3 --> A4
+    end
+
+    A4 -->|"N &gt;= 120 with MASC/CBCL"| B1["TRACK 2b: dimensional anxiety<br/>continuous anxiety T-score"]
+    A4 -->|"N too small"| B2["TRACK 2a: binary anxiety<br/>from COMORBIDITY text field<br/>ASD+ANX vs ASD-only vs TD"]
+    B1 --> C0
+    B2 --> C0
+
+    subgraph W2["WEEK 2-3 - Feature Engineering"]
+        C0["Define final cohort<br/>+ lock inclusion criteria"]
+        C1["fMRI branch<br/>ROI time series CC200 or HO<br/>--&gt; correlation matrix<br/>--&gt; Fisher r-to-z<br/>--&gt; vectorise upper triangle"]
+        C2["sMRI branch<br/>cortical thickness<br/>grey matter volume<br/>subcortical volumes"]
+        C3["Phenotype branch<br/>age, sex, FIQ,<br/>anxiety score,<br/>site, motion mean FD"]
+        C4["Quality control<br/>drop mean FD &gt; 0.2<br/>drop failed QC raters"]
+        C5["Site harmonisation<br/>ComBat / neuroCombat<br/>FIT INSIDE CV FOLDS ONLY"]
+        C0 --> C1 & C2 & C3
+        C1 & C2 --> C4 --> C5
+    end
+
+    C5 --> D0
+    C3 --> D0
+
+    subgraph W4["WEEK 4-5 - ML Baselines"]
+        D0["Feature matrix X<br/>+ label vector y"]
+        D1["Task A: ASD vs TD<br/>classification"]
+        D2["Task B: 3-group<br/>ASD+ANX / ASD-only / TD"]
+        D3["Task C: severity<br/>regression on SRS or ADOS-CSS"]
+        D4["Models in order:<br/>1 Logistic Regression L2<br/>2 Linear SVM<br/>3 Random Forest<br/>4 XGBoost"]
+        D5["Validation<br/>stratified 10-fold<br/>AND leave-one-site-out<br/>report BOTH"]
+        D0 --> D1 & D2 & D3 --> D4 --> D5
+    end
+
+    D5 --> E0
+
+    subgraph W6["WEEK 6 - Deep Learning"]
+        E0["Fusion model<br/>dual-branch"]
+        E1["sMRI branch: MLP<br/>or small 1D CNN"]
+        E2["fMRI branch: GNN<br/>nodes = ROIs<br/>edges = connectivity<br/>GCN then GAT"]
+        E3["Concatenate + anxiety encoder<br/>--&gt; dense head --&gt; softmax"]
+        E0 --> E1 & E2 --> E3
+    end
+
+    E3 --> F0
+
+    subgraph W7["WEEK 7 - Causal &amp; XAI"]
+        F0["Causal DAG<br/>drawn by hand<br/>state assumptions explicitly"]
+        F1["Mediation analysis<br/>X = anxiety<br/>M = amygdala/ACC/DMN feature<br/>Y = ASD severity<br/>covariates: age, sex, FIQ, site, FD"]
+        F2["Report ACME, ADE,<br/>proportion mediated,<br/>bootstrap 5000 CI"]
+        F3["SHAP on best<br/>tabular model<br/>--&gt; map top features<br/>back to ROI pairs"]
+        F0 --> F1 --> F2
+        F0 --> F3
+    end
+
+    F2 --> G0
+    F3 --> G0
+
+    subgraph W8["WEEK 8 - Deliverables"]
+        G0["Results tables<br/>+ figures"]
+        G1["GitHub repo<br/>reproducible notebooks"]
+        G2["Report / paper draft<br/>WITH limitations section"]
+        G3["Presentation deck"]
+        G0 --> G1 & G2 & G3
+    end
+
+    X1["DROPPED - not feasible<br/>Phase 5 trimodal microbiome fusion<br/>REASON: no subject has both<br/>gut microbiome AND MRI data.<br/>Reframe as future-work architecture."]
+
+    style A4 fill:#ffe6cc,stroke:#d79b00,stroke-width:3px
+    style C5 fill:#f8cecc,stroke:#b85450,stroke-width:2px
+    style D5 fill:#f8cecc,stroke:#b85450,stroke-width:2px
+    style X1 fill:#f5f5f5,stroke:#999,stroke-dasharray: 5 5
+    style A1 fill:#d5e8d4,stroke:#82b366
+    style A2 fill:#d5e8d4,stroke:#82b366
+    style G2 fill:#dae8fc,stroke:#6c8ebf
