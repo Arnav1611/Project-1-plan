@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+data/
+outputs/
+*.img
+*.hdr
+*.nii
+*.nii.gz
+*.npz
+*.joblib
+*.zip
